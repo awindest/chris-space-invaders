@@ -1,0 +1,13 @@
+body {
+    margin: 0;
+    overflow: hidden;
+    background: black;
+
+}
+
+@font-face {
+    font-family: beefd;
+    font-sytle: normal;
+    font-weight: 500;
+    src: url('/fonts/beefd.ttf')
+}
