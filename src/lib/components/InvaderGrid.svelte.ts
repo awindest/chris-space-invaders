@@ -1,7 +1,7 @@
 import { Invader } from '$components/Invader.svelte'
 
 export class InvaderGrid {
-	constructor(canvasContext, canvasWidth) {
+	constructor(canvasContext, canvasWidth, frameCounter, invaderSpriteSheet) {
 
 		// this.canvasContext = canvasContext
 		this.canvasWidth = canvasWidth
@@ -24,7 +24,7 @@ export class InvaderGrid {
 		for (let x = 0; x < columns; x++) {
 			for (let y = 0; y < rows; y++) {
 				this.invaders.push(
-					new Invader(canvasContext, {
+					new Invader(canvasContext, frameCounter, invaderSpriteSheet, {
 						position: {
 							x: x * 30,
 							y: y * 30

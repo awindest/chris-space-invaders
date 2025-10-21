@@ -1,11 +1,11 @@
 import { drawBitmapFromSpriteSheet } from "./drawBitmap"
-import { Invader, Spaceship } from '$lib/config'
+import { Invader, Spaceship } from '$lib/config.svelte' // game constants
 
 export function drawSplashScreen(canvasContext, canvas, invaderSpriteSheet) {
     const yOffset = 150
     const xInvaderOffset = 90
     const xTextOffset = 40
-    const invadersLogo = new Image()
+    const invadersLogo: HTMLImageElement = new Image()
     invadersLogo.src = '/images/invadersLogo.jpeg'
 
     // if (state === GAME_STATE.START) {
@@ -15,7 +15,7 @@ export function drawSplashScreen(canvasContext, canvas, invaderSpriteSheet) {
         console.log(invadersLogo)
         canvasContext.drawImage(invadersLogo, canvas.width / 2 - (0.9 * invadersLogo.width) / 2, 4)
 
-        canvasContext.font = '20px beefd'
+        canvasContext.font = '20px beefd' // pre-loaded in header so they show up correctly
         canvasContext.fillStyle = '#F4FFBF'
         canvasContext.fillText('= 50 PTS', canvas.width / 2 - xTextOffset, canvas.height / 2 + yOffset + 0)
         canvasContext.fillText('= 40 PTS', canvas.width / 2 - xTextOffset, canvas.height / 2 + yOffset + 25)

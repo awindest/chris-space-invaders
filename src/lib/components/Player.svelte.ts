@@ -1,7 +1,12 @@
-import type { Game } from '$lib/types'
+import type { Player } from '$lib/types'
+
+// context: CanvasRenderingContext2D
+// velocity:<Velocity>
+// rotation: number
+// opacity: number
 
 
-export class Player {
+export class Player<Player> {
 	constructor(canvasContext, canvasWidth, canvasHeight) {
 
 		this.context = canvasContext

@@ -7,7 +7,15 @@ export type Game = {
 };
 
 export type Player = {
-    ctx: CanvasRenderingContext2D
+    context: CanvasRenderingContext2D
+    image: HTMLImageElement
     position: { x: number; y: number }
     velocity: { x: number; y: number }
+    rotation: number
+    opacity: number
 }
+
+// export type Particle = {
+//     canvasContext: CanvasRenderingContext2D
+//      { position, velocity, radius, color, fades }
+// }

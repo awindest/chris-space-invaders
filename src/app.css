@@ -1,4 +1,7 @@
-body {
+@import "tailwindcss";
+
+body,
+html {
     margin: 0;
     overflow: hidden;
     background: black;

@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { onMount } from 'svelte'
+	import { Stars } from '$components/Stars.svelte'
 	import { InvaderGrid } from '$components/InvaderGrid.svelte'
 	import { Missile } from '$components/Missile.svelte'
 	import { Particle } from '$components/Particle.svelte'
 	import { Player } from '$components/Player.svelte'
 	import { InvaderSpriteSheet } from '$components/InvaderSpriteSheet.svelte'
-	import { drawSplashScreen } from '$components/drawSplashScreen.ts'
+	import { drawSplashScreen } from '$components/drawSplashScreen'
 	import {
 		initAudio,
 		playIntroMusic,
@@ -13,6 +14,12 @@
 		playInvaderWalk,
 		playMissileSound
 	} from '$components/SoundEffects'
+
+	import AudioPlayer, { pauseAll } from '$components/AudioPlayer.svelte'
+	import { tracks } from '$components/tracks.js'
+
+	import { Invader, Spaceship } from '$lib/config.svelte' // game constants
+	let frameCounter = 0 // controls animations
 
 	// object to manage key states
 	const keys = {
@@ -33,8 +40,11 @@
 	const particles = [] // particles are used for background stars, exploding invaders and the player
 
 	let canvas: HTMLCanvasElement = $state()
+	let backgroundCanvas: HTMLCanvasElement = $state()
 	let canvasContext: CanvasRenderingContext2D | null = $state()
+	let backgroundContext: CanvasRenderingContext2D | null = $state()
 	let player
+	let stars
 	let invaderSpriteSheet //: HTMLImageElement
 	let invadersLogo
 	// game state
@@ -44,13 +54,7 @@
 	}
 	let frames = 0
 	let randomInterval = Math.floor(Math.random() * 500 + 500)
-	// let myFont = new FontFace('myFont', 'url(/fonts/beefd.ttf)')
 
-	// myFont.load().then(function (font) {
-	// 	// with canvas, if this is ommited won't work
-	// 	document.fonts.add(font)
-	// 	console.log('Font loaded')
-	// })
 	onMount(() => {
 		// need canvas instantiated first
 		canvasContext = canvas.getContext('2d')
@@ -61,15 +65,21 @@
 		// invaderSpriteSheet.src = '/images/InvaderSpriteSheet1280x960.png'
 		invaderSpriteSheet.src = '/images/InvadersSpriteSheet.png'
 
+		// backgroundContext = backgroundCanvas.getContext('2d')
+		// backgroundCanvas.height = window.innerHeight
+		// backgroundCanvas.width = window.innerWidth
+
 		init()
-		// animate()
 	})
 	// Initialize
 	function init() {
-		createStars()
+		// createStars()
+		// stars = new Stars(backgroundContext, backgroundCanvas.height, backgroundCanvas.width)
+		// stars.draw()
 		initAudio()
 		// playIntroMusic()
-		drawSplashScreen(canvasContext, canvas, invaderSpriteSheet)
+		//drawSplashScreen(canvasContext, canvas, invaderSpriteSheet)
+		animate()
 	}
 	// create stars
 	function createStars() {
@@ -114,11 +124,15 @@
 	} // end of create particles
 
 	function animate() {
+		// sounds of the game
 		if (!game.active) {
 			playIntroMusic()
 			console.log('playing bg music')
 			return
+		} else {
+			playInvaderWalk()
 		}
+		frameCounter++
 
 		// self callback, typical pattern
 		requestAnimationFrame(animate)
@@ -172,6 +186,8 @@
 					fades: true
 				})
 				playExplosionSound()
+				playIntroMusic()
+				// drawSplashScreen()
 			}
 		})
 		// player weapons
@@ -291,5 +307,133 @@
 
 <svelte:window onkeydown={handleKeydown} onkeyup={handleKeyup} />
 
+{#each tracks as track}
+	<AudioPlayer {...track} />
+{/each}
+
 <canvas bind:this={canvas}> </canvas>
-<button onclick={playIntroMusic} />
+
+<div class="absolute h-full w-full overflow-hidden">
+	<div
+		class="absolute h-full w-full transition-all delay-500 duration-1000"
+		class:opacity-0={!$finishedOnce}
+	>
+		<!-- <Canvas></Canvas> -->
+
+
+	{#if !$finishedOnce}
+		<div
+			class="pointer-events-none absolute left-0 top-0 flex h-full w-full flex-row items-center justify-center p-12 text-2xl text-white"
+		>
+			{($progress * 100).toFixed()} %
+		</div>
+	{:else if game.state === 'off'}
+		<div
+			class="pointer-events-none absolute left-0 top-0 flex h-full w-full flex-row items-center justify-center p-12"
+		>
+			<button
+				onclick={() => {
+					game.sound.resume();
+					game.state = 'intro';
+				}}
+				class="pointer-events-auto rounded-full bg-white px-6 py-3 text-2xl text-black flex items-center justify-center"
+			>
+				Insert Coin
+				<img src={coin} class="p-1" height="40" width="40" alt="a quarter" />
+			</button>
+		</div>
+	{/if}
+
+	<div class="absolute right-6 top-6">
+		<button
+			class="rounded-full bg-white p-2 [&>*]:h-7 [&>*]:w-7"
+			onclick={() => (game.muted = !game.muted)}
+		>
+			{#if game.muted}
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					width="192"
+					height="192"
+					fill="#000000"
+					viewBox="0 0 256 256"
+				>
+					<rect width="256" height="256" fill="none" /><path
+						d="M80,168H32a8,8,0,0,1-8-8V96a8,8,0,0,1,8-8H80l72-56V224Z"
+						fill="none"
+						stroke="#000000"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="16"
+					/>
+					<line
+						x1="240"
+						y1="104"
+						x2="192"
+						y2="152"
+						fill="none"
+						stroke="#000000"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="16"
+					/>
+					<line
+						x1="240"
+						y1="152"
+						x2="192"
+						y2="104"
+						fill="none"
+						stroke="#000000"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="16"
+					/>
+				</svg>
+			{:else}
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					width="192"
+					height="192"
+					fill="#000000"
+					viewBox="0 0 256 256"
+					><rect width="256" height="256" fill="none" /><path
+						d="M80,168H32a8,8,0,0,1-8-8V96a8,8,0,0,1,8-8H80l72-56V224Z"
+						fill="none"
+						stroke="#000000"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="16"
+					/><line
+						x1="192"
+						y1="104"
+						x2="192"
+						y2="152"
+						fill="none"
+						stroke="#000000"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="16"
+					/><line
+						x1="224"
+						y1="88"
+						x2="224"
+						y2="168"
+						fill="none"
+						stroke="#000000"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="16"
+					/></svg
+				>
+			{/if}
+		</button>
+	</div>
+</div>
+
+<style>
+	#backgroundCanvas {
+		z-index: 0;
+	}
+	#foregroundCanvas {
+		z-index: 1;
+	}
+</style>

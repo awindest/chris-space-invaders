@@ -1,4 +1,9 @@
 // Game constants
+// interface GameState {
+//  state: 'start'| 'run'| 'stop'
+// }
+// export const gameState = $state<GameState>({ state: 'start'})
+
 // export const Invader = { width: 24, height: 18, speed: 4 }
 export const Invader = { width: 24, height: 18, speed: 4 }
 export const Spaceship = {

@@ -1,15 +1,21 @@
 import { InvaderMissile } from '$components/InvaderMissile.svelte'
 export class Invader {
-	constructor(canvasContext, { position }) {
+	// canvasContext:
+	// 	velocity
+	// width: number = 0
+	// height: number = 0
+	constructor(canvasContext, frameCounter, invaderSpriteSheet, { position }) {
 
 		this.canvasContext = canvasContext
 		this.velocity = {
 			x: 0,
 			y: 0
 		}
+		this.frameCounter = frameCounter
+		this.invaderSpriteSheet = invaderSpriteSheet
 
 		const image = new Image()
-		image.src = '/invader.png'
+		image.src = '/images/invader.png'
 		image.onload = () => {
 			const scale = 1
 			this.image = image
@@ -37,7 +43,7 @@ export class Invader {
 
 	shoot(invaderMissiles) {
 		invaderMissiles.push(
-			new InvaderMissile(this.canvasContext, {
+			new InvaderMissile(this.canvasContext, this.frameCounter, this.invaderSpriteSheet, {
 				position: {
 					x: this.position.x + this.width / 2,
 					y: this.position.y + this.height
