@@ -1,16 +1,15 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 body,
 html {
-    margin: 0;
-    overflow: hidden;
-    background: black;
-
+	margin: 0;
+	overflow: hidden;
+	background: black;
 }
 
 @font-face {
-    font-family: beefd;
-    font-sytle: normal;
-    font-weight: 500;
-    src: url('/fonts/beefd.ttf')
+	font-family: beefd;
+	font-sytle: normal;
+	font-weight: 500;
+	src: url('/fonts/beefd.ttf');
 }

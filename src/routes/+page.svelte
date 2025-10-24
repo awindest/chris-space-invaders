@@ -14,19 +14,23 @@
 		playInvaderWalk,
 		playMissileSound
 	} from '$components/SoundEffects'
+	import { sendEvent, getGameState } from '$components/StateMachine.svelte'
+	import coin from '$lib/assets/quarter.png'
 
 	import AudioPlayer, { pauseAll } from '$components/AudioPlayer.svelte'
 	import { tracks } from '$components/tracks.js'
 
 	import { Invader, Spaceship } from '$lib/config.svelte' // game constants
+	// import { getGameState } from '$lib/game-state.svelte'
 	let frameCounter = 0 // controls animations
+	let okToPlaySound: boolean = $state(false) // start off muted
 
 	// object to manage key states
 	const keys = {
-		a: {
+		ArrowLeft: {
 			pressed: false
 		},
-		d: {
+		ArrowRight: {
 			pressed: false
 		},
 		space: {
@@ -34,24 +38,19 @@
 		}
 	}
 	const dunnoFactor: number = 10
-	const missiles = []
-	const grids = []
-	const invaderMissiles = []
-	const particles = [] // particles are used for background stars, exploding invaders and the player
+	const missiles: string[] = []
+	const grids: string[] = []
+	const invaderMissiles: string[] = []
+	const particles: string[] = [] // particles are used for background stars, exploding invaders and the player
 
-	let canvas: HTMLCanvasElement = $state()
+	let canvas: HTMLCanvasElement | null = $state()
 	let backgroundCanvas: HTMLCanvasElement = $state()
 	let canvasContext: CanvasRenderingContext2D | null = $state()
-	let backgroundContext: CanvasRenderingContext2D | null = $state()
 	let player
 	let stars
 	let invaderSpriteSheet //: HTMLImageElement
 	let invadersLogo
-	// game state
-	let game = {
-		over: false,
-		active: true
-	}
+
 	let frames = 0
 	let randomInterval = Math.floor(Math.random() * 500 + 500)
 
@@ -60,26 +59,21 @@
 		canvasContext = canvas.getContext('2d')
 		canvas.height = window.innerHeight
 		canvas.width = window.innerWidth
+		// <Player bind:this={player} {canvasContext} or use context! {canvas.width} {canvas.height} />
 		player = new Player(canvasContext, canvas.width, canvas.height)
 		invaderSpriteSheet = new Image()
 		// invaderSpriteSheet.src = '/images/InvaderSpriteSheet1280x960.png'
 		invaderSpriteSheet.src = '/images/InvadersSpriteSheet.png'
 
-		// backgroundContext = backgroundCanvas.getContext('2d')
-		// backgroundCanvas.height = window.innerHeight
-		// backgroundCanvas.width = window.innerWidth
-
 		init()
 	})
 	// Initialize
 	function init() {
-		// createStars()
+		createStars()
 		// stars = new Stars(backgroundContext, backgroundCanvas.height, backgroundCanvas.width)
 		// stars.draw()
 		initAudio()
-		// playIntroMusic()
-		//drawSplashScreen(canvasContext, canvas, invaderSpriteSheet)
-		animate()
+		initGame()
 	}
 	// create stars
 	function createStars() {
@@ -122,11 +116,20 @@
 			)
 		}
 	} // end of create particles
+	function initGame() {
+		if (getGameState() === 'insertCoin') {
+			if (okToPlaySound) playIntroMusic()
+			console.log('playing bg music')
+			drawSplashScreen(canvasContext, canvas, invaderSpriteSheet)
 
+			return
+		}
+	}
 	function animate() {
 		// sounds of the game
-		if (!game.active) {
-			playIntroMusic()
+		console.log(getGameState())
+		if (getGameState() === 'insertCoin') {
+			if (okToPlaySound) playIntroMusic()
 			console.log('playing bg music')
 			return
 		} else {
@@ -173,11 +176,12 @@
 				setTimeout(() => {
 					invaderMissiles.splice(index, 1)
 					player.opacity = 0
-					game.over = true
+					// game.over = true
 				}, 0)
 
 				setTimeout(() => {
-					game.active = false
+					// game.active = false
+					sendEvent('gameOver')
 				}, 2000)
 
 				createParticles(canvasContext, {
@@ -244,10 +248,13 @@
 			})
 		})
 		// handle key presses
-		if (keys.a.pressed && player.position.x >= 0) {
+		if (keys.ArrowLeft.pressed && player.position.x >= 0) {
 			player.velocity.x = -7
 			player.rotation = 0.15
-		} else if (keys.d.pressed && player.position.x + player.width + dunnoFactor <= canvas.width) {
+		} else if (
+			keys.ArrowRight.pressed &&
+			player.position.x + player.width + dunnoFactor <= canvas.width
+		) {
 			player.velocity.x = 7
 			player.rotation = -0.15
 		} else {
@@ -266,13 +273,14 @@
 	} // end of animate
 
 	function handleKeydown(event: KeyboardEvent) {
-		if (game.over) return
+		// if (game.over) return
+		if (getGameState() === 'gameOver') return
 		switch (event.key) {
-			case 'a':
-				keys.a.pressed = true
+			case 'ArrowLeft':
+				keys.ArrowLeft.pressed = true
 				break
-			case 'd':
-				keys.d.pressed = true
+			case 'ArrowRight':
+				keys.ArrowRight.pressed = true
 				break
 			case ' ':
 				missiles.push(
@@ -293,11 +301,11 @@
 	} // end of event listener
 	function handleKeyup(event: KeyboardEvent) {
 		switch (event.key) {
-			case 'a':
-				keys.a.pressed = false
+			case 'ArrowLeft':
+				keys.ArrowLeft.pressed = false
 				break
-			case 'd':
-				keys.d.pressed = false
+			case 'ArrowRight':
+				keys.ArrowRight.pressed = false
 				break
 			case ' ':
 				break
@@ -311,129 +319,109 @@
 	<AudioPlayer {...track} />
 {/each}
 
-<canvas bind:this={canvas}> </canvas>
+<!-- <canvas bind:this={canvas}> </canvas> -->
 
 <div class="absolute h-full w-full overflow-hidden">
-	<div
-		class="absolute h-full w-full transition-all delay-500 duration-1000"
-		class:opacity-0={!$finishedOnce}
-	>
-		<!-- <Canvas></Canvas> -->
-
-
-	{#if !$finishedOnce}
-		<div
-			class="pointer-events-none absolute left-0 top-0 flex h-full w-full flex-row items-center justify-center p-12 text-2xl text-white"
-		>
-			{($progress * 100).toFixed()} %
-		</div>
-	{:else if game.state === 'off'}
+	<div class="absolute h-full w-full transition-all delay-500 duration-1000">
 		<div
 			class="pointer-events-none absolute left-0 top-0 flex h-full w-full flex-row items-center justify-center p-12"
 		>
 			<button
 				onclick={() => {
-					game.sound.resume();
-					game.state = 'intro';
+					// game.sound.resume()
+					// game.state = 'intro'
+					sendEvent('intro')
+					drawSplashScreen(canvasContext, canvas, invaderSpriteSheet)
 				}}
-				class="pointer-events-auto rounded-full bg-white px-6 py-3 text-2xl text-black flex items-center justify-center"
+				class="pointer-events-auto flex items-center justify-center gap-4 rounded-full bg-white p-10 px-6 py-3 text-2xl text-black"
 			>
 				Insert Coin
-				<img src={coin} class="p-1" height="40" width="40" alt="a quarter" />
+				<img src={coin} height="40" width="40" alt="a quarter" />
 			</button>
 		</div>
-	{/if}
 
-	<div class="absolute right-6 top-6">
-		<button
-			class="rounded-full bg-white p-2 [&>*]:h-7 [&>*]:w-7"
-			onclick={() => (game.muted = !game.muted)}
-		>
-			{#if game.muted}
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					width="192"
-					height="192"
-					fill="#000000"
-					viewBox="0 0 256 256"
-				>
-					<rect width="256" height="256" fill="none" /><path
-						d="M80,168H32a8,8,0,0,1-8-8V96a8,8,0,0,1,8-8H80l72-56V224Z"
-						fill="none"
-						stroke="#000000"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="16"
-					/>
-					<line
-						x1="240"
-						y1="104"
-						x2="192"
-						y2="152"
-						fill="none"
-						stroke="#000000"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="16"
-					/>
-					<line
-						x1="240"
-						y1="152"
-						x2="192"
-						y2="104"
-						fill="none"
-						stroke="#000000"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="16"
-					/>
-				</svg>
-			{:else}
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					width="192"
-					height="192"
-					fill="#000000"
-					viewBox="0 0 256 256"
-					><rect width="256" height="256" fill="none" /><path
-						d="M80,168H32a8,8,0,0,1-8-8V96a8,8,0,0,1,8-8H80l72-56V224Z"
-						fill="none"
-						stroke="#000000"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="16"
-					/><line
-						x1="192"
-						y1="104"
-						x2="192"
-						y2="152"
-						fill="none"
-						stroke="#000000"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="16"
-					/><line
-						x1="224"
-						y1="88"
-						x2="224"
-						y2="168"
-						fill="none"
-						stroke="#000000"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="16"
-					/></svg
-				>
-			{/if}
-		</button>
+		<div class="absolute right-6 top-6">
+			<button
+				class="rounded-full bg-white p-2 [&>*]:h-7 [&>*]:w-7"
+				onclick={() => (okToPlaySound = !okToPlaySound)}
+			>
+				{#if okToPlaySound}
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="192"
+						height="192"
+						fill="#000000"
+						viewBox="0 0 256 256"
+					>
+						<rect width="256" height="256" fill="none" /><path
+							d="M80,168H32a8,8,0,0,1-8-8V96a8,8,0,0,1,8-8H80l72-56V224Z"
+							fill="none"
+							stroke="#000000"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="16"
+						/>
+						<line
+							x1="240"
+							y1="104"
+							x2="192"
+							y2="152"
+							fill="none"
+							stroke="#000000"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="16"
+						/>
+						<line
+							x1="240"
+							y1="152"
+							x2="192"
+							y2="104"
+							fill="none"
+							stroke="#000000"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="16"
+						/>
+					</svg>
+				{:else}
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="192"
+						height="192"
+						fill="#000000"
+						viewBox="0 0 256 256"
+						><rect width="256" height="256" fill="none" /><path
+							d="M80,168H32a8,8,0,0,1-8-8V96a8,8,0,0,1,8-8H80l72-56V224Z"
+							fill="none"
+							stroke="#000000"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="16"
+						/><line
+							x1="192"
+							y1="104"
+							x2="192"
+							y2="152"
+							fill="none"
+							stroke="#000000"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="16"
+						/><line
+							x1="224"
+							y1="88"
+							x2="224"
+							y2="168"
+							fill="none"
+							stroke="#000000"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="16"
+						/></svg
+					>
+				{/if}
+			</button>
+		</div>
 	</div>
 </div>
-
-<style>
-	#backgroundCanvas {
-		z-index: 0;
-	}
-	#foregroundCanvas {
-		z-index: 1;
-	}
-</style>

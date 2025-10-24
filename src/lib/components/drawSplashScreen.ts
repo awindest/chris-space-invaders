@@ -8,10 +8,9 @@ export function drawSplashScreen(canvasContext, canvas, invaderSpriteSheet) {
     const invadersLogo: HTMLImageElement = new Image()
     invadersLogo.src = '/images/invadersLogo.jpeg'
 
-    // if (state === GAME_STATE.START) {
 
     invadersLogo.onload = () => {
-        canvasContext.clearRect(0, 0, canvas.width, canvas.height)
+        // canvasContext.clearRect(0, 0, canvas.width, canvas.height)
         console.log(invadersLogo)
         canvasContext.drawImage(invadersLogo, canvas.width / 2 - (0.9 * invadersLogo.width) / 2, 4)
 
