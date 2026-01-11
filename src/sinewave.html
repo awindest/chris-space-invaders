@@ -1,0 +1,18 @@
+<span id="ball" style="position: absolute">O</span>
+
+<script>
+    let ball = document.getElementById('ball');
+    let bounds = { x: 300, y: 100 };
+
+    function sineLoop(timestamp) {
+        let x = timestamp / 25; // moderate speed
+        x %= bounds.x; // wrap back to 0
+        console.log('x = ', x, timestamp)
+        let sine = Math.sin(timestamp / 750); // moderate speed
+        let y = bounds.y * (1 + sine) / 2;
+        ball.style.transform = `translate(${x}px, ${y}px)`;
+
+        requestAnimationFrame(sineLoop);
+    }
+    requestAnimationFrame(sineLoop);
+</script>

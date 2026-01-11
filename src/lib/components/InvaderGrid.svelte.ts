@@ -1,48 +1,64 @@
+import { cInvader, cInvaderGrid } from '$lib/config.svelte'
+
 import { Invader } from '$components/Invader.svelte'
+import type { InvaderType, PositionType, VelocityType } from '$lib/types'
 
 export class InvaderGrid {
-	constructor(canvasContext, canvasWidth, frameCounter, invaderSpriteSheet) {
+	canvasContext: CanvasRenderingContext2D
+	invadersSpriteSheet: HTMLImageElement
+	canvasWidth: number
 
-		// this.canvasContext = canvasContext
-		this.canvasWidth = canvasWidth
+	invaderPattern: number[]
+	position: PositionType
+	velocity: VelocityType
+	invaders: InvaderType[]
+	width: number
 
-		this.position = {
-			x: 0,
-			y: 0
+	constructor(canvasContext: CanvasRenderingContext2D, invadersSpriteSheet: HTMLImageElement) {
+
+		this.canvasContext = canvasContext
+		this.invadersSpriteSheet = invadersSpriteSheet
+		this.canvasWidth = canvasContext.canvas.width
+		this.invaderPattern = [1, 2, 2, 3, 3]
+		this.position = { // initial offset of grid in pixels
+			x: 10,
+			y: 15
 		}
 
-		this.velocity = {
-			x: 3,
+		this.velocity = { // move across screen
+			x: 2, // 3,
 			y: 0
 		}
 		this.invaders = []
-		const columns = Math.floor(Math.random() * 10 + 5) // two to seven rows
-		const rows = Math.floor(Math.random() * 5 + 2) // two to seven rows
-
-		this.width = columns * 30
-
-		for (let x = 0; x < columns; x++) {
-			for (let y = 0; y < rows; y++) {
+		this.width = cInvaderGrid.columns * cInvader.width
+		const xSeparation = 1.1
+		const ySeparation = 1.2
+		for (let x = 0; x < cInvaderGrid.columns; x++) {
+			for (let y = 0; y < cInvaderGrid.rows; y++) {
 				this.invaders.push(
-					new Invader(canvasContext, frameCounter, invaderSpriteSheet, {
-						position: {
-							x: x * 30,
-							y: y * 30
-						}
-					})
+					new Invader(
+						this.canvasContext,
+						this.invadersSpriteSheet,
+						this.invaderPattern[y], {
+						x: x * cInvader.width * xSeparation + this.position.x,
+						y: y * cInvader.height * ySeparation + this.position.y
+					}
+
+					)
 				)
 			}
 		}
+
 	}
-	update() {
+	update(): void {
 		this.position.x += this.velocity.x
 		this.position.y += this.velocity.y
 
-		this.velocity.y = 0 //otherwise the grid would go off screen
+		this.velocity.y = 0 //turn off; otherwise the grid would go off screen
 
-		if (this.position.x + this.width > this.canvasWidth || this.position.x <= 0) {
-			this.velocity.x = -this.velocity.x
-			this.velocity.y = 30
+		if (this.position.x + this.width >= this.canvasWidth || this.position.x <= 0) {
+			this.velocity.x = -this.velocity.x //* 1.15 // increase velocity as we move closer to player
+			this.velocity.y = cInvader.height // move down a row after hitting the edge.
 		}
 	}
 }

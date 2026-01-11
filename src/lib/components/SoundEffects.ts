@@ -1,3 +1,5 @@
+import { gsap } from 'gsap'
+
 let missileLaunchSound: HTMLAudioElement[] = []
 let invaderWalkSound: HTMLAudioElement
 let introSound: HTMLAudioElement
@@ -24,15 +26,29 @@ export function initAudio() {
 // Play pretty background music
 export function playIntroMusic() {
     if (introSound.ended || introSound.currentTime === 0) {
-        introSound.volume = 0.5
+        // Create a timeline
+        const tl = gsap.timeline()
+        introSound.volume = 0.0
         introSound.play()
+        // Fade the volume in over 2 seconds
+        tl.to(introSound, { volume: 1, duration: 3 })
+
     } // end if
+} // end playIntroMusic
+
+export function pauseIntroMusic() {
+    // Create a timeline
+    const tl = gsap.timeline()
+    // Fade the volume out over 2 seconds
+    tl.to(introSound, { volume: 0, duration: 2 })
+    introSound.pause()
 } // end playIntroMusic
 
 // Play invader walk
 export function playInvaderWalk() {
     if (invaderWalkSound.ended || invaderWalkSound.currentTime === 0) {
         invaderWalkSound.volume = 0.5
+        // invaderWalkSound.playbackRate = some variable
         invaderWalkSound.play()
     } // end if
 } // end playInvaderWalk

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import '../app.css'
-	import favicon from '$lib/assets/invader.png'
+	import favicon from '$lib/assets/invader-green-black-eyes.png'
 
 	let { children } = $props()
 </script>
