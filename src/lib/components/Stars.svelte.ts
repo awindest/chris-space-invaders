@@ -4,7 +4,7 @@ import type { ParticleType } from '$lib/types'
 export class Stars {
 	constructor(canvasContext: CanvasRenderingContext2D, particles: ParticleType[]) {
 
-		for (let i = 0; i < 1000; i++) {
+		for (let i = 0; i < 500; i++) {
 			particles.push(
 				new Particle(canvasContext, {
 					position: {

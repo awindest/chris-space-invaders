@@ -9,9 +9,9 @@ export interface VelocityType {
 }
 
 export interface GlobalGameStateType {
-    canvasContext: CanvasRenderingContext2D
-    canvasHeight: number
-    canvasWidth: number
+    canvasContext?: CanvasRenderingContext2D | null
+    canvasHeight?: number
+    canvasWidth?: number
     gameState: string
     wave: number
     okToPlaySound: boolean

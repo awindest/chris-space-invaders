@@ -1,8 +1,17 @@
 <script lang="ts">
 	let { children } = $props()
-
+	import type {
+		InvaderGridType,
+		PlayerType,
+		GlobalGameStateType,
+		InvaderMissileType,
+		ParticleType,
+		FireballType,
+		SplashScreenType
+	} from '$lib/types'
 	import { cInvader, cInvaderMissile, cFireball } from '$lib/config.svelte' // game constants
 	import { onMount, onDestroy, setContext } from 'svelte'
+	import { getGameStateContext } from '$components/GlobalGameState'
 	import MuteButton from '$components/MuteButton.svelte'
 	import InsertCoinButton from '$components/InsertCoinButton.svelte'
 	import { Stars } from '$components/Stars.svelte'
@@ -23,16 +32,6 @@
 	import AudioPlayer, { pauseAll } from '$components/AudioPlayer.svelte'
 	import { tracks } from '$components/tracks.js'
 
-	// import { InvaderMissile } from '$components/InvaderMissile.svelte'
-	import type {
-		InvaderGridType,
-		PlayerType,
-		InvaderMissileType,
-		ParticleType,
-		FireballType,
-		SplashScreenType
-	} from '$lib/types'
-	// import { Fireball } from './Fireball.svelte'
 	let frame: number = 0 // controls animations
 	let level = 0
 
@@ -68,10 +67,16 @@
 	let invadersSpriteSheet: HTMLImageElement
 	let scoringScreenVisible: boolean = false
 	let requestAnimationId: number
+	let globalGameState = getGameStateContext()
 
 	$effect(() => {
 		// need canvas instantiated first
-		if (!canvasContext) canvasContext = <CanvasRenderingContext2D>canvas!.getContext('2d')
+		if (!canvasContext) {
+			canvasContext = <CanvasRenderingContext2D>canvas!.getContext('2d')
+			// globalGameState.canvasContext = canvasContext
+			// globalGameState.canvasHeight = canvasContext.canvas.height
+			// globalGameState.canvasWidth = canvasContext.canvas.width
+		}
 
 		if (!canvasContext || !(canvasContext instanceof CanvasRenderingContext2D)) {
 			throw new Error('Failed to get 2D context')
